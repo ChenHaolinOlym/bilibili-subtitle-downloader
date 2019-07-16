@@ -4,104 +4,103 @@
 # check the encode type before writing into srt
 import urllib.request
 import json
+import os
 
 
+class SubRequest:
+    contentList = []
+    def __init__(self, aid):
+        self.multiRequest(aid)
 
-def main():
-    multiRequest()
-
-def getInput():
-    '''
-    处理输入内容，防止非法输入'''
-    while True:
-        try:
-            aid = input('请输入av号')
-            break
-        except:
-            print('非法输入')
-    return aid
-
-def singleRequest(aid, cid = None):
-    '''单次请求
-    '''
-    if cid:
-        response = urllib.request.urlopen(f"https://api.bilibili.com/x/web-interface/view?aid={aid}&cid={cid}")
-        serial = response.read().decode('utf-8')
-        data = json.loads(serial)['data']
-        subtitle = {}
-        for i in data['subtitle']['list']:
-            subtitle[i['lan']] = i['subtitle_url']
-        return subtitle
-    else:
-        response = urllib.request.urlopen(f"https://api.bilibili.com/x/web-interface/view?aid={aid}")
-        serial = response.read().decode('utf-8')
-        data = json.loads(serial)['data']
-        return data['pages']
-
-def subtitleRequest(url):
-    response = urllib.request.urlopen(url)
-    serial = response.read().decode('utf-8')
-    data = json.loads(serial)
-    return data    
-
-def saveToSrt(data, lan, file_name):
-    sub = data['body']
-    count = 1
-    for line in sub:
-        print(line)
-        from_ = parseTime(line['from'])
-        to_ = parseTime(line['to'])
-        content = line['content']
-        with open(f'{file_name}-{lan}.srt', 'a+', newline='', encoding='utf-8') as f:
-            f.write(f'{count}\n\n')
-            f.write(f'{from_} -> {to_}\n\n')
-            f.write(str(content))
-            f.write('\n\n')
-        count += 1
-            
-def parseTime(time):
-    lst = str(time).split('.')
-    hour = '00'
-    minute = '00'
-    second = '00'
-    milisecond = '00'
-    if len(lst) == 0:
-        pass
-    else:
-        if int(lst[0]) > 60:
-            minute = str(int(lst[0])//60)
-            second = str(int(lst[0])%60)
-            if int(minute) > 60:
-                hour = str(int(minute)//60)
-                minute = str(int(minute)%60)
+    def singleRequest(self, aid, cid = None):
+        '''单次请求
+        '''
+        if cid:
+            response = urllib.request.urlopen(f"https://api.bilibili.com/x/web-interface/view?aid={aid}&cid={cid}")
+            serial = response.read().decode('utf-8')
+            data = json.loads(serial)['data']
+            subtitle = {}
+            for i in data['subtitle']['list']:
+                subtitle[i['lan']] = i['subtitle_url']
+            return subtitle
         else:
-            second = str(lst[0])
+            response = urllib.request.urlopen(f"https://api.bilibili.com/x/web-interface/view?aid={aid}")
+            serial = response.read().decode('utf-8')
+            data = json.loads(serial)['data']
+            return data['pages']
 
-    string = hour+':'+minute+':'+second+','+milisecond
-    return string
+    def subtitleRequest(self, url):
+        response = urllib.request.urlopen(url)
+        serial = response.read().decode('utf-8')
+        data = json.loads(serial)
+        return data
 
-def multiRequest():
-    '''
-    多次请求，针对分p的情况'''
-    aid = getInput()
-    aid = 45936507
-    pages = singleRequest(aid)
-    names = {}
-    subtitle = []
-    for i in pages:
-        names[i['page']] = i['part']
-        subtitle.append(singleRequest(aid, i['cid']))
-    for i in range(len(subtitle)):
-        j = subtitle[i]
-        for k in j.keys():
-            data = subtitleRequest(j[k])
-            print(names[i+1])
-            saveToSrt(data, k, names[i+1])
+    def saveToSrt(self, data, lan, file_name, aid):
+        sub = data['body']
+        count = 1
+        mkdir(f'data/{aid}')
+        with open(f'data\\{aid}\\{file_name}-{lan}.srt', 'w') as f:
+            pass
+        for line in sub:
+            print(line)
+            from_ = self.parseTime(line['from'])
+            to_ = self.parseTime(line['to'])
+            content = line['content']
+            with open(f'data\\{aid}\\{file_name}-{lan}.srt', 'a+', newline='', encoding='utf-8') as f:
+                f.write(f'{count}\n\n')
+                f.write(f'{from_} -> {to_}\n\n')
+                f.write(str(content))
+                f.write('\n\n')
+            count += 1
+        self.contentList.append(f'{file_name}-{lan}.srt')
+                
+    def parseTime(self, time):
+        lst = str(time).split('.')
+        hour = '00'
+        minute = '00'
+        second = '00'
+        milisecond = '00'
+        if len(lst) == 0:
+            pass
+        else:
+            if int(lst[0]) > 60:
+                minute = str(int(lst[0])//60)
+                second = str(int(lst[0])%60)
+                if int(minute) > 60:
+                    hour = str(int(minute)//60)
+                    minute = str(int(minute)%60)
+            else:
+                second = str(lst[0])
 
+        string = hour+':'+minute+':'+second+','+milisecond
+        return string
 
-lan = {'en-US': '英语（美国）', 'zh-Hans': '中文（简体）'}
+    def multiRequest(self, aid):
+        '''
+        多次请求，针对分p的情况'''
+        pages = self.singleRequest(aid)
+        names = {}
+        subtitle = []
+        for i in pages:
+            names[i['page']] = i['part']
+            subtitle.append(self.singleRequest(aid, i['cid']))
+        for i in range(len(subtitle)):
+            j = subtitle[i]
+            for k in j.keys():
+                data = self.subtitleRequest(j[k])
+                print(names[i+1])
+                self.saveToSrt(data, k, names[i+1], aid)
+    
+    def content(self):
+        return self.contentList
 
-
+def mkdir(path):
+    current = str(os.path.abspath('.'))
+    isexists = os.path.exists(current+'/'+path)
+    if isexists:
+        print('Folder exists')
+    else:
+        os.mkdir(current+'/'+path)
 
 if __name__ == "__main__":
-    main()
+    print(SubRequest(45936507).content())

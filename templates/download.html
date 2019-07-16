@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+
+{% block body %}
+    <h1>Download Page</h1>
+    <ul>
+        {% for sub in subs %}
+            <li><a href="{{ url_for('download', filename=sub) }}">{{ sub }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}

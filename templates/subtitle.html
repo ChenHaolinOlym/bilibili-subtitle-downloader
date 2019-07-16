@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+
+{% block body %}
+    <h1>
+        Bilibili Subtitle Downloader
+    </h1>
+    <form action="/av" method="post">
+        <input name="av" placeholder="Input the av number of the video here" type="text">
+        <input type="submit" value="submit">
+    </form>
+{% endblock %}

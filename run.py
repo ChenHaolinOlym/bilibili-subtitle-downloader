@@ -1,0 +1,37 @@
+from flask import Flask, render_template, request, send_from_directory, make_response
+from main import SubRequest
+import os
+
+app = Flask(__name__)
+
+@app.route('/subtitle')
+def subtitle():
+    return render_template('subtitle.html')
+
+@app.route('/av', methods=["GET", "POST"])
+def av():
+    global av
+    av = request.form.get("av")
+    if not av:
+        return "invalid input"
+    if not av.isdigit():
+        return "invalid input"
+    else:
+        subs = SubRequest(av)
+        if subs.content() == []:
+            return render_template("download.html", subs = ['No subtitle provided'])
+        else:
+            return render_template("download.html", subs = subs.content())
+
+@app.route('/download/<path:filename>', methods=['GET'])
+def download(filename):
+    response = make_response(send_from_directory(f'{os.getcwd()}/data/{av}', filename, as_attachment=True))
+    response.headers["Content-Disposition"] = "attachment; filename={}".format(filename.encode().decode('latin-1'))
+    return response
+
+@app.errorhandler(404)
+def miss(e):
+    return render_template('404.html'), 404
+
+if __name__ == "__main__":
+    app.run()
