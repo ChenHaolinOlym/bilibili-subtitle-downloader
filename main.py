@@ -8,9 +8,13 @@ import os
 
 
 class SubRequest:
-    contentList = []
     def __init__(self, aid):
         self.multiRequest(aid)
+        self.aid = aid
+
+    def __str__(self):
+        with open(f'data/{self.aid}/content.txt') as f:
+            return str(f.readlines())
 
     def singleRequest(self, aid, cid = None):
         '''单次请求
@@ -26,8 +30,10 @@ class SubRequest:
         else:
             response = urllib.request.urlopen(f"https://api.bilibili.com/x/web-interface/view?aid={aid}")
             serial = response.read().decode('utf-8')
-            data = json.loads(serial)['data']
-            return data['pages']
+            data = json.loads(serial)
+            if data['code'] != 0:
+                return []
+            return data['data']['pages']
 
     def subtitleRequest(self, url):
         response = urllib.request.urlopen(url)
@@ -38,11 +44,9 @@ class SubRequest:
     def saveToSrt(self, data, lan, file_name, aid):
         sub = data['body']
         count = 1
-        mkdir(f'data/{aid}')
         with open(f'data\\{aid}\\{file_name}-{lan}.srt', 'w') as f:
             pass
         for line in sub:
-            print(line)
             from_ = self.parseTime(line['from'])
             to_ = self.parseTime(line['to'])
             content = line['content']
@@ -52,7 +56,9 @@ class SubRequest:
                 f.write(str(content))
                 f.write('\n\n')
             count += 1
-        self.contentList.append(f'{file_name}-{lan}.srt')
+        print(f"{file_name}-{lan}.srt successfully written")
+        with open(f'data/{aid}/content.txt', 'a+', newline='') as f:
+            f.write(f'{file_name}-{lan}.srt\n')
                 
     def parseTime(self, time):
         lst = str(time).split('.')
@@ -84,6 +90,9 @@ class SubRequest:
         for i in pages:
             names[i['page']] = i['part']
             subtitle.append(self.singleRequest(aid, i['cid']))
+        mkdir(f'data/{aid}')
+        with open(f'data/{aid}/content.txt', 'w') as f:
+            pass
         for i in range(len(subtitle)):
             j = subtitle[i]
             for k in j.keys():
@@ -91,8 +100,6 @@ class SubRequest:
                 print(names[i+1])
                 self.saveToSrt(data, k, names[i+1], aid)
     
-    def content(self):
-        return self.contentList
 
 def mkdir(path):
     current = str(os.path.abspath('.'))
@@ -101,6 +108,7 @@ def mkdir(path):
         print('Folder exists')
     else:
         os.mkdir(current+'/'+path)
+        print('Folder create successfully')
 
 if __name__ == "__main__":
-    print(SubRequest(45936507).content())
+    print(SubRequest(45936507))

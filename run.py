@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, send_from_directory, make_response
-from main import SubRequest
+import main
 import os
 
 app = Flask(__name__)
@@ -17,16 +17,19 @@ def av():
     if not av.isdigit():
         return "invalid input"
     else:
-        subs = SubRequest(av)
-        if subs.content() == []:
+        main.SubRequest(av)
+        with open(f'data/{av}/content.txt', 'r') as f:
+            subs = f.readlines()
+        if subs == []:
             return render_template("download.html", subs = ['No subtitle provided'])
         else:
-            return render_template("download.html", subs = subs.content())
+            return render_template("download.html", subs = subs)
 
 @app.route('/download/<path:filename>', methods=['GET'])
 def download(filename):
     response = make_response(send_from_directory(f'{os.getcwd()}/data/{av}', filename, as_attachment=True))
     response.headers["Content-Disposition"] = "attachment; filename={}".format(filename.encode().decode('latin-1'))
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
     return response
 
 @app.errorhandler(404)
