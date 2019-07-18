@@ -44,13 +44,13 @@ class SubRequest:
     def saveToSrt(self, data, lan, file_name, aid):
         sub = data['body']
         count = 1
-        with open(f'data\\{aid}\\{file_name}-{lan}.srt', 'w') as f:
+        with open(f'data/{aid}/{file_name}-{lan}.srt', 'w') as f:
             pass
         for line in sub:
             from_ = self.parseTime(line['from'])
             to_ = self.parseTime(line['to'])
             content = line['content']
-            with open(f'data\\{aid}\\{file_name}-{lan}.srt', 'a+', newline='', encoding='utf-8') as f:
+            with open(f'data/{aid}/{file_name}-{lan}.srt', 'a+', newline='', encoding='utf-8') as f:
                 f.write(f'{count}\n\n')
                 f.write(f'{from_} -> {to_}\n\n')
                 f.write(str(content))
@@ -88,7 +88,7 @@ class SubRequest:
         names = {}
         subtitle = []
         for i in pages:
-            names[i['page']] = i['part']
+            names[i['page']] = i['part'].replace(' ', '_')
             subtitle.append(self.singleRequest(aid, i['cid']))
         mkdir(f'data/{aid}')
         with open(f'data/{aid}/content.txt', 'w') as f:
