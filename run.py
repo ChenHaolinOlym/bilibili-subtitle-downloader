@@ -3,6 +3,7 @@ import main
 import os
 
 app = Flask(__name__)
+aid = 0
 
 @app.route('/subtitle')
 def subtitle():
@@ -10,15 +11,15 @@ def subtitle():
 
 @app.route('/av', methods=["GET", "POST"])
 def av():
-    global av
-    av = request.form.get("av")
-    if not av:
+    global aid
+    aid = request.form.get("av")
+    if not aid:
         return "invalid input"
-    if not av.isdigit():
+    if not aid.isdigit():
         return "invalid input"
     else:
-        main.SubRequest(av)
-        with open(f'data/{av}/content.txt', 'r') as f:
+        main.SubRequest(aid)
+        with open(f'data/{aid}/content.txt', 'r') as f:
             subs = f.readlines()
         if subs == []:
             return render_template("download.html", subs = ['No subtitle provided'])
@@ -27,9 +28,7 @@ def av():
 
 @app.route('/download/<path:filename>', methods=['GET'])
 def download(filename):
-    response = make_response(send_from_directory(f'{os.getcwd()}/data/{av}', filename, as_attachment=True))
-    response.headers["Content-Disposition"] = "attachment; filename={}".format(filename.encode().decode('latin-1'))
-    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    response = make_response(send_from_directory(f'{os.getcwd()}/data/{aid}', filename, as_attachment=True))
     return response
 
 @app.errorhandler(404)
