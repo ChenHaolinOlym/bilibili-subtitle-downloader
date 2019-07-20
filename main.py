@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # issue: deal with the situation that a series do not have same amount of subtitle for each episode
 # issue: check that whether the series have subtitle or not first
 # issue: finish the comments and the alerts
