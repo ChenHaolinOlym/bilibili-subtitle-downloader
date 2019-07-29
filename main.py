@@ -5,7 +5,7 @@
 import urllib.request
 import json
 import os
-
+import requests
 
 class SubRequest:
     def __init__(self, aid):
@@ -19,17 +19,24 @@ class SubRequest:
     def singleRequest(self, aid, cid = None):
         '''单次请求
         '''
+        header={'User-Agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'}
         if cid:
-            response = urllib.request.urlopen(f"https://api.bilibili.com/x/web-interface/view?aid={aid}&cid={cid}")
-            serial = response.read().decode('utf-8')
+            url=f"https://api.bilibili.com/x/web-interface/view?aid={aid}&cid={cid}"
+            print(url)
+            header={'User-Agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'}
+            response=requests.get(url,headers=header)
+            serial = response.content.decode('utf-8')
             data = json.loads(serial)['data']
             subtitle = {}
             for i in data['subtitle']['list']:
                 subtitle[i['lan']] = i['subtitle_url']
             return subtitle
         else:
-            response = urllib.request.urlopen(f"https://api.bilibili.com/x/web-interface/view?aid={aid}")
-            serial = response.read().decode('utf-8')
+            url=f"https://api.bilibili.com/x/web-interface/view?aid={aid}"
+            print(url)
+            header={'User-Agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'}
+            response=requests.get(url,headers=header)
+            serial = response.content.decode('utf-8')
             data = json.loads(serial)
             if data['code'] != 0:
                 return []
@@ -65,6 +72,7 @@ class SubRequest:
         hour = '00'
         minute = '00'
         second = '00'
+        second = '00'
         milisecond = '00'
         if len(lst) == 0:
             pass
@@ -97,7 +105,6 @@ class SubRequest:
             j = subtitle[i]
             for k in j.keys():
                 data = self.subtitleRequest(j[k])
-                print(names[i+1])
                 self.saveToSrt(data, k, names[i+1], aid)
     
 
@@ -111,4 +118,4 @@ def mkdir(path):
         print('Folder create successfully')
 
 if __name__ == "__main__":
-    print(SubRequest(45936507))
+    pass

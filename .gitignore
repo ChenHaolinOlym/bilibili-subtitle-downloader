@@ -107,3 +107,4 @@ venv.bak/
 
 # personal
 data
+.vscode/
